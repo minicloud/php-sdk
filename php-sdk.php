@@ -1,9 +1,9 @@
 <?php
 /**
  * 迷你云PHP-SDK
- * 适用迷你云1.5+版本
+ * 适用迷你云1.5版本
  */
-class MiniSDK{	
+class MiniSDK15{	
 	//appKey，由管理事先分配好
 	private $appKey="d6n6Hy8CtSFEVqNh";
 	//appSecret，由管理事先分配好
@@ -15,7 +15,7 @@ class MiniSDK{
 	/**
 	 * 构造函数
 	 */
-	public function MiniSDK($host){
+	public function MiniSDK15($host){
 		$this->host = $host;
 	}
 	/**
@@ -51,6 +51,69 @@ class MiniSDK{
 		return $result;
 	}
 	/**
+	 * 获得用户信息
+	 */
+	public function accountInfo(){ 
+		$url = $this->host."/api.php/1/account/info";
+		$data = array();
+		$data = $this->signUrl2Paramters($url,$data);  		
+		$result = json_decode($this->request($url,$data));
+		return $result;
+	}
+	/**
+	 * 获得用户信息
+	 */
+	public function createFolder($path){ 
+		$url = $this->host."/api.php/1/fileops/create_folder";
+		$data = array(
+			"root"=>"miniyun",
+			"path"=>$path,	 
+			);
+		$data = $this->signUrl2Paramters($url,$data);  		
+		$result = json_decode($this->request($url,$data));
+		return $result;
+	}
+	/**
+	 * 修改名称,适合文件夹/文件，下面2个参数都要绝对路径
+	 */
+	public function rename($path,$newPath){ 
+		$url = $this->host."/api.php/1/fileops/move";
+		$data = array(
+			"root"=>"miniyun",
+			"from_path"=>$path,	
+			"to_path"=>$newPath, 
+			);
+		$data = $this->signUrl2Paramters($url,$data);  		
+		$result = json_decode($this->request($url,$data));
+		return $result;
+	}
+	/**
+	 * 修改名称,适合文件夹/文件，下面2个参数都要绝对路径
+	 */
+	public function delete($path){ 
+		$url = $this->host."/api.php/1/fileops/delete";
+		$data = array(
+			"root"=>"miniyun",
+			"path"=>$path,	 
+			);
+		$data = $this->signUrl2Paramters($url,$data);  		
+		$result = json_decode($this->request($url,$data));
+		return $result;
+	}
+	/**
+	 * 创建外链，适合文件夹/文件
+	 */
+	public function createLink($path){ 
+		$url = $this->host."/api.php/1/link/create".urlencode($path);
+		$data = array(
+			"root"=>"miniyun", 
+			); 
+		$data = $this->signUrl2Paramters($url,$data);  		
+		$result = json_decode($this->request($url,$data));
+		return $result;
+	}
+	
+	/**
 	 * 对url签名
 	 */
 	private function signUrl2Paramters($url,$params){		
@@ -85,7 +148,7 @@ class MiniSDK{
 		curl_setopt($ch,CURLOPT_POST,count($params));
 		curl_setopt($ch,CURLOPT_POSTFIELDS,$data); 
 		$data = curl_exec($ch);
-		curl_close($ch); 
+		curl_close($ch);   
 		return $data;
 	}
 	/**
@@ -116,8 +179,24 @@ $host = "http://yp.nje.cn";
 $userName = "jktest1";
 //用户密码
 $userPassword = "jktest@1";
-$miniSdk = new MiniSDK($host);
-$result = $miniSdk->login($userName,$userPassword);
+$miniSDK = new MiniSDK15($host);
+$data = $miniSDK->login($userName,$userPassword); 
+print_r($data);
 //文件列表
-$listData = $miniSdk->listFile("/");
-print_r($listData);
+$data = $miniSDK->listFile("/");
+print_r($data);
+//获得用户信息
+//$data = $miniSDK->accountInfo();
+//print_r($data);
+//创建目录
+//$data = $miniSDK->createFolder("/测试1/测试2/测试31");
+//print_r($data);
+//修改名称
+//$data = $miniSDK->rename("/测试1/测试2/测试3","/测试1/测试2/测试4");
+//print_r($data);
+//修改名称
+//$data = $miniSDK->delete("/测试1/测试2/测试4");
+//print_r($data);
+//创建外链
+$data = $miniSDK->createLink("/测试1/测试2");
+print_r($data);
