@@ -74,6 +74,84 @@ class MiniSDK15{
 		return $result;
 	}
 	/**
+	 * 创建文件
+	 */
+	public function createFile($localPath,$remotePath){ 
+		$siteInfo = $this->siteInfo();
+		if(array_key_exists("dataMode",$siteInfo)){
+			$dataMode = $siteInfo->{"dataMode"}; 
+			if($dataMode->{"source"}==="miniStor"){
+				//启用迷你存储
+			    $data = $this->miniStoreSec($localPath,$remotePath); 
+				//如果返回值uri属性标记该文件上传的迷你存储的地址,说明该文件需要上传
+				//如果没有uri,否则标记文件已经上传成功了
+				if(array_key_exists("uri",$data)){
+					//该文件需要上传
+					//与文件二进制内容一并提交的，还有秒传接口返回的reqeust子对象，将其序列化到url地址
+					//从秒传接口返回的uri作为迷你存储的入口地址
+					$url    = $data->{"uri"}."?";
+					$params = $data->{"request"};
+					foreach($params as $key=>$value) { $url .= $key.'='.$value.'&'; }  
+					include "./HttpClient.php";
+					$http = new HttpClient(); 
+					$files = array( 
+						'files'=>$localPath,//文件的头标记是files
+					); 
+					$http->post($url,array(),$files); //提交文件内容的时候，网络不稳定可能会出现错误，通过返回值进行处理
+					return json_decode($http->get_body());
+				}else{
+					return $data;//该文件秒传成功
+				}
+				
+			} 
+		}				 
+	}
+	/**
+	 * 获得迷你云站点信息
+	 */
+	public function siteInfo(){
+		$url = $this->host."/api.php/1/info";
+		$data = array(  
+			);  		
+		$result = json_decode($this->request($url,$data));
+		return $result;
+	}
+	/**
+	 * 迷你存储秒传接口
+	 * 如果服务器已经存储有该文件内容，则直接成功
+	 * 如果服务器没有存储文件内容，在返回迷你存储服务器地址
+	 */
+	public function miniStoreSec($localPath,$remotePath){
+		$hashCode = $this->hashFile($localPath); 
+		$fileSize = filesize($localPath);
+		
+		$url = $this->host."/api.php/1/paramsdata/miniyun".urlencode($remotePath);
+		$data = array( 
+			"path"=>$remotePath,
+			"hash"=>$hashCode,
+			"size"=>$fileSize,
+			"offset"=>0,
+			"overwrite"=>true,
+			"parent_rev"=>0,
+			"locale"=>"en",
+			);
+		$data = $this->signUrl2Paramters($url,$data);
+		$result = $this->request($url,$data);
+		//如果返回值不是false，标示该文件已经上传成功
+		if($result!==false){
+			$data = json_decode($result); 
+			return $data;
+		}
+		//如果返回值不是false
+		return false;
+	}
+	/**
+	 * 计算文件内容的hash值
+	 */
+	private function hashFile($localPath){
+		return sha1_file($localPath);
+	}
+	/**
 	 * 修改名称,适合文件夹/文件，下面2个参数都要绝对路径
 	 */
 	public function rename($path,$newPath){ 
@@ -136,6 +214,7 @@ class MiniSDK15{
 	}
 	/**
 	*发送请求，迷你云接收POST请求
+	*根据response的status code，如果执行错误，返回的不是200
 	*/
 	private function request($url,$params){
 		$data = "";
@@ -148,8 +227,20 @@ class MiniSDK15{
 		curl_setopt($ch,CURLOPT_POST,count($params));
 		curl_setopt($ch,CURLOPT_POSTFIELDS,$data); 
 		$data = curl_exec($ch);
-		curl_close($ch);   
-		return $data;
+		$info = curl_getinfo($ch);		
+		if($info['http_code'] != 200){
+			$output = "No cURL data returned for $url [". $info['http_code']. "]";
+			if (curl_error($ch)){
+				$output .= "\n". curl_error($ch);
+			}
+			print_r($output);
+			
+		    curl_close($ch);   
+			return false;
+		}else{			
+		    curl_close($ch);   
+		    return $data;
+		} 
 	}
 	/**
 	*对密码DES加密
@@ -183,8 +274,8 @@ $miniSDK = new MiniSDK15($host);
 $data = $miniSDK->login($userName,$userPassword); 
 print_r($data);
 //文件列表
-$data = $miniSDK->listFile("/");
-print_r($data);
+//$data = $miniSDK->listFile("/");
+//print_r($data);
 //获得用户信息
 //$data = $miniSDK->accountInfo();
 //print_r($data);
@@ -198,5 +289,12 @@ print_r($data);
 //$data = $miniSDK->delete("/测试1/测试2/测试4");
 //print_r($data);
 //创建外链
-$data = $miniSDK->createLink("/测试1/测试2");
-print_r($data);
+//$data = $miniSDK->createLink("/测试1/测试2");
+//print_r($data);
+//获得迷你云站点信息
+//$data = $miniSDK->siteInfo();
+//print_r($data);
+//上传文件
+//请注意，第二个参数是迷你云服务器绝对路径
+//$data = $miniSDK->createFile("c:/test.txt","/测试1/test3.txt");
+//print_r($data);
