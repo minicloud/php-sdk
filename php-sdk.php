@@ -1,7 +1,7 @@
 <?php
 /**
  * 迷你云PHP-SDK
- * 适用迷你云1.5版本
+ * 适用迷你云1.5版本，暂时不支持1.6+版本
  */
 class MiniSDK15{	
 	//appKey，由管理事先分配好
@@ -105,6 +105,18 @@ class MiniSDK15{
 				
 			} 
 		}				 
+	}
+	/**
+	 * 获得文件下载地址
+	 */
+	public function getDownloadUrl($remotePath){ 
+		$url = $this->host."/api.php/1/file/download?";		
+		$data = array(  
+			  'path'=>$remotePath
+			);  
+		$data = $this->signUrl2Paramters($url,$data);
+		foreach($data as $key=>$value) { $url .= $key.'='.$value.'&'; }   
+		return $url;
 	}
 	/**
 	 * 获得迷你云站点信息
@@ -297,4 +309,7 @@ print_r($data);
 //上传文件
 //请注意，第二个参数是迷你云服务器绝对路径
 //$data = $miniSDK->createFile("c:/test.txt","/测试1/test3.txt");
+//print_r($data);
+//下载文件 
+//$data = $miniSDK->getDownloadUrl("/测试1/test3.txt");
 //print_r($data);
