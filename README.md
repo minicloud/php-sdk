@@ -7,8 +7,11 @@ php-sdk
 相比1.5版SDK有下面变化
 
 1、由相对路径修改为绝对路径
-用户：ceshid，系统ID：7
+
+比如用户：ceshid，系统ID：7
+
 1.5版本是：$miniSDK->listFile("/");
+
 2.1版本是：$miniSDK->listFile("/7/");
 
 其它接口以此类推
