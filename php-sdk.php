@@ -118,7 +118,7 @@ class MiniSDK21{
 		$http = new HttpClient(); 
 		$files = array( 
 			'files'=>$localPath,//文件的头标记是files
-		);
+		); 
 		$http->post($secInfo->{"url"},$params,$files);
 		$result = json_decode($http->get_body());
 		return $result;
@@ -126,7 +126,7 @@ class MiniSDK21{
 	/**
 	 * 创建文件
 	 */
-	public function createFile($localPath,$remotePath){ 
+	public function createFile($localPath,$remotePath){  
 		//先获得文件的signature以及size
 		$this->fileSignature = $this->hashFile($localPath); 
 		$this->fileSize = filesize($localPath);
@@ -134,11 +134,11 @@ class MiniSDK21{
 		$secInfo = $this->fileSec($remotePath);
 		if(!$secInfo->{"success"}){
 			//文件秒传没有成功，需要上传该文件
-			$storeType = $secInfo->{"store_type"};
+			$storeType = $secInfo->{"store_type"};  
 			if($storeType=="miniStore"){
 				//上传文件之前，先获得该文件是否是断点文件，便于文件断点续传
-				$storeSecInfo = $this->miniStoreFileSec($secInfo); 
-				if(!$storeSecInfo->{"success"}){
+				$storeSecInfo = $this->miniStoreFileSec($secInfo);  
+				if(!$storeSecInfo->{"success"}){ 
 					$result = $this->miniStoreFileUpload($localPath,$secInfo);
 					return $result;
 				}
@@ -314,13 +314,20 @@ $userName = "ceshid";
 $userPassword = "123456@nje.cn";
 $miniSDK = new MiniSDK21($host);
 $data = $miniSDK->login($userName,$userPassword); 
-// print_r($data);
+//获得用户信息，其中userId在后面将会需要，在路径处理的时候，需要加上该用户ID
+$data = $miniSDK->accountInfo();
+$userId = $data->{'id'}; 
+//上传文件
+//请注意，第二个参数是迷你云服务器绝对路径
+//迷你云存储默认支持断点续传，请注意：miniStoreFileUpload函数的实现
+//执行到miniStoreFileUpload的时候，已经获得上次文件上传断点位置
+//客户端可读取后面文件内容write到服务器即可
+$data = $miniSDK->createFile("/home/jim/php-sdk/test.pptx","/".$userId."/测试1/test1.pptx");
+print_r($data);
 //文件列表
 // $data = $miniSDK->listFile("/7/");
 // print_r($data);
-//获得用户信息
-// $data = $miniSDK->accountInfo();
-// print_r($data);
+
 //创建目录
 // $data = $miniSDK->createFolder("/7/测试1/测试2/测试31");
 // print_r($data);
@@ -333,10 +340,6 @@ $data = $miniSDK->login($userName,$userPassword);
 //获得迷你云站点信息
 //$data = $miniSDK->siteInfo();
 //print_r($data);
-//上传文件
-//请注意，第二个参数是迷你云服务器绝对路径
-// $data = $miniSDK->createFile("/root/test.txt","/7/测试1/test3.txt");
-// print_r($data);
 //下载文件 
 // $data = $miniSDK->getDownloadUrl("/7/测试1/test3.txt");
 // print_r($data);

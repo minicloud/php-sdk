@@ -180,8 +180,8 @@ class HttpClient {
             $this->_error = socket_last_error();
         }
 
-        socket_set_option($sock,SOL_SOCKET,SO_RCVTIMEO,array("sec"=>10, "usec"=>0 ) );
-        socket_set_option($sock,SOL_SOCKET,SO_SNDTIMEO,array("sec"=>10, "usec"=>0 ) );
+        socket_set_option($sock,SOL_SOCKET,SO_RCVTIMEO,array("sec"=>0, "usec"=>0 ) );
+        socket_set_option($sock,SOL_SOCKET,SO_SNDTIMEO,array("sec"=>0, "usec"=>0 ) );
 
         if( isset($this->_proxy_type) &&  $this->_proxy_type !=  HttpClient::PROXY_NONE ) {
             list ($proxy_host,$proxy_port) = explode(':',$this->_proxy_host);
